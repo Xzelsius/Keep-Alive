@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "RS.KeepAlive": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "KA_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
