@@ -73,7 +73,7 @@ namespace RS.KeepAlive
                     builder =>
                     {
                         builder.AddDebug();
-                        builder.AddConsole();
+                        builder.AddConsole(options => options.IncludeScopes = true);
                     });
     }
 }
