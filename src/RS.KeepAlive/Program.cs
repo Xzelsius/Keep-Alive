@@ -38,6 +38,7 @@ namespace RS.KeepAlive
                 .ConfigureLogging(
                     builder =>
                     {
+                        builder.AddDebug();
                         builder.AddConsole();
                     })
                 .RunConsoleAsync();
