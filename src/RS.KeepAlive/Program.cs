@@ -1,8 +1,9 @@
 // Copyright (c) Raphael Strotz. All rights reserved.
 
 using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+using System.IO;
+using System.Linq;
+using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -12,33 +13,60 @@ namespace RS.KeepAlive
 {
     internal class Program
     {
-        public static Task Main(string[] args)
+        public static int Main(string[] args)
         {
             Console.WriteLine("Keep-Alive Utility (c) Raphael Strotz");
             Console.WriteLine("-------------------------------------");
 
-            if (args == null || args.Length == 0)
+            var app = new CommandLineApplication
             {
-                return PrintHelp();
-            }
+                Name = $"dotnet {Path.GetFileName(typeof(Program).Assembly.Location)}",
+                ThrowOnUnexpectedArgument = true
+            };
 
-            return new HostBuilder()
+            app.HelpOption("-h|--help");
+            var urlOption = app.Option<string>("-u|--url <URL>", "URL(s) that are called regularly", CommandOptionType.MultipleValue).IsRequired();
+            var intervalOption = app.Option<int>("-i|--interval <INTERVAL>", "Interval in which the URL(s) are called", CommandOptionType.SingleValue);
+
+            app.OnExecute(async () => await CreateHostBuilder(urlOption, intervalOption).RunConsoleAsync());
+
+            try
+            {
+                return app.Execute(args);
+            }
+            catch (Exception e)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Error.WriteLine($"Error occurred: {e.Message}");
+                Console.ResetColor();
+
+                return 1;
+            }
+        }
+
+        private static IHostBuilder CreateHostBuilder(CommandOption<string> urlOption, CommandOption<int> intervalOption)
+            => new HostBuilder()
                 .ConfigureHostConfiguration(
                     builder =>
                     {
                         builder.AddEnvironmentVariables(prefix: "KA_");
-                        builder.AddCommandLine(args);
                     })
                 .ConfigureAppConfiguration(
                     builder =>
                     {
                         builder.AddEnvironmentVariables(prefix: "KA_");
-                        builder.AddCommandLine(args, SwitchMap);
                     })
                 .ConfigureServices(
                     services =>
                     {
                         services.AddLogging();
+                        services.Configure<KeepAliveOptions>(options =>
+                        {
+                            options.Targets = urlOption.ParsedValues.ToArray();
+
+                            if (intervalOption.ParsedValue == 0) return;
+                            options.Interval = intervalOption.ParsedValue;
+                        });
                         services.AddHostedService<KeepAliveService>();
                     })
                 .ConfigureLogging(
@@ -46,28 +74,6 @@ namespace RS.KeepAlive
                     {
                         builder.AddDebug();
                         builder.AddConsole();
-                    })
-                .RunConsoleAsync();
-        }
-
-        private static IDictionary<string, string> SwitchMap => new Dictionary<string, string>
-        {
-            {"-u", "url"},
-            {"-i", "interval"}
-        };
-
-        private static Task PrintHelp()
-        {
-            Console.WriteLine("");
-            Console.WriteLine("Usage: dotnet RS.KeepAlive.dll [options]");
-            Console.WriteLine("");
-            Console.WriteLine("Options:");
-            Console.WriteLine("  -u|--url        URL(s) that are called regularly");
-            Console.WriteLine("                  separated with semicolon");
-            Console.WriteLine("  -i|--interval   Interval in which the URL(s) are called");
-            Console.WriteLine("");
-
-            return Task.CompletedTask;
-        }
+                    });
     }
 }
