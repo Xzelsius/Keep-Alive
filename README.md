@@ -8,21 +8,23 @@ Otherwise you can download it here: [https://dotnet.microsoft.com/download](http
 ## Usage
 ### Command-Line
 ```
-dotnet RS.KeepAlive.dll [options]
+dotnet RS.KeepAlive.dll [arguments] [options]
+
+Arguments:
+  <URL>                     URL(s) that are called regularly
 
 Options:
   -h|--help                 Show help information
-  -u|--url <URL>            URL(s) that are called regularly
-  -i|--interval <INTERVAL>  Interval in which the URL(s) are called
+  -i|--interval <INTERVAL>  Interval in minutes in which the URL(s) are called
 ```
 
 Example
 ```
-dotnet RS.KeepAlive.dll -u "https://example.com"
+dotnet RS.KeepAlive.dll "https://example.com"
 ```
 or for multiple URLs
 ```
-dotnet RS.KeepAlive.dll -u "https://example.com" -u "https://other.example.com"
+dotnet RS.KeepAlive.dll "https://example.com" "https://other.example.com"
 ```
 
 ### Docker
@@ -30,7 +32,7 @@ You can quickly run from one of the pre-built images `xzelsius/keep-alive:latest
 
 Type the following command
 ```
-docker run -rm -it xzelsius/keep-alive:latest -u <URL> [-i <INTERVAL>]
+docker run -rm -it xzelsius/keep-alive:latest <URL> [-i <INTERVAL>]
 ```
 
 ## Copyright and License

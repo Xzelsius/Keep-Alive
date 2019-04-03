@@ -25,10 +25,10 @@ namespace RS.KeepAlive
             };
 
             app.HelpOption("-h|--help");
-            var urlOption = app.Option<string>("-u|--url <URL>", "URL(s) that are called regularly", CommandOptionType.MultipleValue).IsRequired();
-            var intervalOption = app.Option<int>("-i|--interval <INTERVAL>", "Interval in which the URL(s) are called", CommandOptionType.SingleValue);
+            var urlArgument = app.Argument<string>("<URL>", "URL(s) that are called regularly", multipleValues: true).IsRequired();
+            var intervalOption = app.Option<int>("-i|--interval <INTERVAL>", "Interval in minutes in which the URL(s) are called", CommandOptionType.SingleValue);
 
-            app.OnExecute(async () => await CreateHostBuilder(urlOption, intervalOption).RunConsoleAsync());
+            app.OnExecute(async () => await CreateHostBuilder(urlArgument, intervalOption).RunConsoleAsync());
 
             try
             {
@@ -44,7 +44,7 @@ namespace RS.KeepAlive
             }
         }
 
-        private static IHostBuilder CreateHostBuilder(CommandOption<string> urlOption, CommandOption<int> intervalOption)
+        private static IHostBuilder CreateHostBuilder(CommandArgument<string> urlArgument, CommandOption<int> intervalOption)
             => new HostBuilder()
                 .ConfigureHostConfiguration(
                     builder =>
@@ -62,7 +62,7 @@ namespace RS.KeepAlive
                         services.AddLogging();
                         services.Configure<KeepAliveOptions>(options =>
                         {
-                            options.Targets = urlOption.ParsedValues.ToArray();
+                            options.Targets = urlArgument.ParsedValues.ToArray();
 
                             if (intervalOption.ParsedValue == 0) return;
                             options.Interval = intervalOption.ParsedValue;
